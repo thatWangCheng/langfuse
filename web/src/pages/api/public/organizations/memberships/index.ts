@@ -8,6 +8,12 @@ import {
   handleUpdateMembership,
   handleDeleteMembership,
 } from "@/src/ee/features/admin-api/server/memberships";
+import {
+  handleSelfHostedGetMemberships,
+  handleSelfHostedUpdateMembership,
+  handleSelfHostedDeleteMembership,
+} from "@/src/features/public-api/server/selfHostedOrgMemberships";
+import { env } from "@/src/env.mjs";
 
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { hasEntitlementBasedOnPlan } from "@/src/features/entitlements/server/hasEntitlement";
@@ -50,12 +56,13 @@ export default async function handler(
     });
   }
 
-  if (
-    !hasEntitlementBasedOnPlan({
-      plan: authCheck.scope.plan,
-      entitlement: "admin-api",
-    })
-  ) {
+  const hasAdminApi = hasEntitlementBasedOnPlan({
+    plan: authCheck.scope.plan,
+    entitlement: "admin-api",
+  });
+  const selfHosted =
+    !hasAdminApi && env.LANGFUSE_SELF_HOSTED_MEMBERSHIP_API === "true";
+  if (!hasAdminApi && !selfHosted) {
     return res.status(403).json({
       error: "This feature is not available on your current plan.",
     });
@@ -71,6 +78,20 @@ export default async function handler(
 
   // Route to the appropriate handler based on HTTP method
   try {
+    if (selfHosted) {
+      const scope = {
+        orgId: authCheck.scope.orgId,
+        apiKeyId: authCheck.scope.apiKeyId,
+      };
+      switch (req.method) {
+        case "GET":
+          return await handleSelfHostedGetMemberships(req, res, scope);
+        case "PUT":
+          return await handleSelfHostedUpdateMembership(req, res, scope);
+        case "DELETE":
+          return await handleSelfHostedDeleteMembership(req, res, scope);
+      }
+    }
     switch (req.method) {
       case "GET":
         return handleGetMemberships(req, res, authCheck.scope.orgId);

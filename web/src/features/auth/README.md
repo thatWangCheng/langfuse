@@ -5,8 +5,8 @@ Enterprise license. Build the web image from this branch; the stock 3.177.0
 image does not contain the Feishu provider.
 
 1. In the Feishu developer console, open an enterprise custom app. Enable the
-   `contact:user.email:readonly` user permission, publish the app, and grant the
-   intended users access to it.
+   `contact:user.email:readonly` and `contact:user.employee:readonly` user
+   permissions, publish the app, and grant the intended users access to it.
 2. Add `https://<your-langfuse-domain>/api/auth/callback/feishu` to the app's
    redirect URL allowlist. Use the same public origin as `NEXTAUTH_URL`.
 3. Set these variables in the deployment's private environment file:
@@ -15,6 +15,10 @@ image does not contain the Feishu provider.
    NEXTAUTH_URL=https://<your-langfuse-domain>
    AUTH_FEISHU_CLIENT_ID=<app-id>
    AUTH_FEISHU_CLIENT_SECRET=<app-secret>
+   # Optional: reject users of other Feishu tenants.
+   AUTH_FEISHU_TENANT_KEY=<tenant-key>
+   # Optional: override the requested scopes (space separated).
+   # AUTH_FEISHU_SCOPE=contact:user.email:readonly
    ```
 
 4. Build and recreate the web container. With the repository's source-build
@@ -29,15 +33,39 @@ Open `/auth/sign-in` and choose **Feishu (飞书)**. The same option is availabl
 on the sign-up page. Existing email/password and other providers keep working.
 If `AUTH_DISABLE_SIGNUP=true`, only existing users can sign in.
 
-The provider identifies accounts by Feishu `open_id`. Feishu must return a valid
-contact email address via the `email` field. An enterprise mailbox alone is not
-sufficient; configure the user's contact email in Feishu before signing in.
-Langfuse does not automatically link an existing account by matching its email
-because Feishu's contact email is not independently verified. An existing
+The provider identifies accounts by Feishu `union_id`, which is the same across
+all apps of a tenant, so replacing the Feishu app keeps existing accounts. The
+user's email is the enterprise email (`enterprise_email`), falling back to the
+contact email (`email`); a user with neither cannot sign up. Langfuse does not
+automatically link an existing account by matching its email. An existing
 email/password account with the same email requires an explicit account
 migration before it can use Feishu. This version has no account-linking UI;
 opening the sign-in page while authenticated redirects to the home page.
 Organization invitations and project permissions still apply.
+
+## Organization memberships without an Enterprise license
+
+`/api/public/organizations/memberships` (GET / PUT / DELETE, organization-scoped
+API key) normally requires the `admin-api` entitlement. Set
+`LANGFUSE_SELF_HOSTED_MEMBERSHIP_API=true` to serve it from an open-source
+implementation instead, for example to let an access-request bot grant and
+revoke organization roles:
+
+- `GET` lists `{ userId, email, name, role }` of every member.
+- `PUT { userId, role }` sets the role (`ADMIN`, `MEMBER`, `VIEWER`, `NONE`) and
+  adds the user to the organization if needed. The user must have signed in
+  once.
+- `DELETE { userId }` removes the membership and the user's project memberships
+  in that organization.
+
+OWNER memberships are never granted, changed or removed through this API.
+Project-level roles are not offered: without the `rbac-project-roles`
+entitlement Langfuse applies the organization role to every project. Changes
+are recorded in the audit log with the API key as actor.
+
+To have Feishu users join the organization without access until a role is
+granted, set `LANGFUSE_DEFAULT_ORG_ID=<org-id>` and
+`LANGFUSE_DEFAULT_ORG_ROLE=NONE`.
 
 See Feishu's [authorization guide](https://open.feishu.cn/document/authentication-management/access-token/obtain-oauth-code)
 and [user information reference](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get).

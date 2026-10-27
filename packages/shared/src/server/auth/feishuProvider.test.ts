@@ -3,7 +3,7 @@ import type {
   TokenEndpointHandler,
   UserinfoEndpointHandler,
 } from "next-auth/providers/oauth";
-import { FeishuProvider } from "./feishuProvider";
+import { FEISHU_DEFAULT_SCOPE, FeishuProvider } from "./feishuProvider";
 
 const options = { clientId: "test-app", clientSecret: "test-secret" };
 type FeishuProfile = Parameters<
@@ -17,13 +17,18 @@ const userInfo = {
     union_id: "on_test_user",
     name: "Test User",
     email: "user@example.com",
+    enterprise_email: "user@corp.example.com",
     avatar_url: "https://example.com/avatar.png",
     tenant_key: "test-tenant",
   },
 };
 
-const readUserInfo = async (payload: unknown) => {
-  const handler = FeishuProvider(options).userinfo as UserinfoEndpointHandler;
+const readUserInfo = async (
+  payload: unknown,
+  providerOptions: Parameters<typeof FeishuProvider>[0] = options,
+) => {
+  const handler = FeishuProvider(providerOptions)
+    .userinfo as UserinfoEndpointHandler;
   return (await handler.request!({
     tokens: { access_token: "test-token" },
     client: { userinfo: async () => payload },
@@ -32,16 +37,29 @@ const readUserInfo = async (payload: unknown) => {
   >[0])) as FeishuProfile;
 };
 
+const withData = (data: Record<string, unknown>) => ({
+  ...userInfo,
+  data: { ...userInfo.data, ...data },
+});
+
 describe("Feishu OAuth profile", () => {
-  it("unwraps user information and identifies the account by open_id", async () => {
+  it("unwraps user information, identifies the account by union_id and prefers the enterprise email", async () => {
     const profile = await readUserInfo(userInfo);
 
     expect(await FeishuProvider(options).profile(profile, {})).toEqual({
-      id: "ou_test_user",
+      id: "on_test_user",
       name: "Test User",
-      email: "user@example.com",
+      email: "user@corp.example.com",
       image: "https://example.com/avatar.png",
     });
+  });
+
+  it("falls back to the contact email without an enterprise email", async () => {
+    const profile = await readUserInfo(withData({ enterprise_email: "" }));
+
+    expect((await FeishuProvider(options).profile(profile, {})).email).toBe(
+      "user@example.com",
+    );
   });
 
   it("rejects an API error even when HTTP userinfo succeeds", async () => {
@@ -51,20 +69,42 @@ describe("Feishu OAuth profile", () => {
   });
 
   it("rejects a profile without a stable account identifier", async () => {
-    await expect(
-      readUserInfo({ ...userInfo, data: { ...userInfo.data, open_id: "" } }),
-    ).rejects.toThrow("Invalid Feishu user information");
+    await expect(readUserInfo(withData({ union_id: "" }))).rejects.toThrow(
+      "Invalid Feishu user information",
+    );
   });
 
-  it("does not invent an email address when Feishu omits it", async () => {
-    const profile = await readUserInfo({
-      ...userInfo,
-      data: { ...userInfo.data, email: undefined },
-    });
+  it("does not invent an email address when Feishu omits both", async () => {
+    const profile = await readUserInfo(
+      withData({ email: undefined, enterprise_email: null }),
+    );
 
     expect(
       (await FeishuProvider(options).profile(profile, {})).email,
     ).toBeNull();
+  });
+
+  it("rejects users of another tenant when a tenant key is configured", async () => {
+    const restricted = { ...options, tenantKey: "test-tenant" };
+
+    await expect(
+      readUserInfo(withData({ tenant_key: "other-tenant" }), restricted),
+    ).rejects.toThrow("Feishu user belongs to another tenant");
+    await expect(readUserInfo(userInfo, restricted)).resolves.toMatchObject({
+      union_id: "on_test_user",
+    });
+  });
+
+  it("requests both email scopes unless configured otherwise", () => {
+    const scopeOf = (provider: ReturnType<typeof FeishuProvider>) =>
+      (provider.authorization as { params: { scope: string } }).params.scope;
+
+    expect(scopeOf(FeishuProvider(options))).toBe(FEISHU_DEFAULT_SCOPE);
+    expect(
+      scopeOf(
+        FeishuProvider({ ...options, scope: "contact:user.email:readonly" }),
+      ),
+    ).toBe("contact:user.email:readonly");
   });
 });
 

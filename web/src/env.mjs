@@ -221,6 +221,8 @@ export const env = createEnv({
     AUTH_JUMPCLOUD_SCOPE: z.string().optional(),
     AUTH_FEISHU_CLIENT_ID: z.string().optional(),
     AUTH_FEISHU_CLIENT_SECRET: z.string().optional(),
+    AUTH_FEISHU_SCOPE: z.string().optional(),
+    AUTH_FEISHU_TENANT_KEY: z.string().optional(),
     AUTH_CUSTOM_CLIENT_ID: z.string().optional(),
     AUTH_CUSTOM_CLIENT_SECRET: z.string().optional(),
     AUTH_CUSTOM_ISSUER: z.url().optional(),
@@ -303,6 +305,9 @@ export const env = createEnv({
     // EE License
     LANGFUSE_EE_LICENSE_KEY: z.string().optional(),
     ADMIN_API_KEY: z.string().optional(),
+    // Serve /api/public/organizations/memberships without the admin-api
+    // entitlement (self-hosted, organization roles only).
+    LANGFUSE_SELF_HOSTED_MEMBERSHIP_API: z.enum(["true", "false"]).optional(),
     ENCRYPTION_KEY: z
       .string()
       .length(
@@ -676,6 +681,8 @@ export const env = createEnv({
     AUTH_JUMPCLOUD_SCOPE: process.env.AUTH_JUMPCLOUD_SCOPE,
     AUTH_FEISHU_CLIENT_ID: process.env.AUTH_FEISHU_CLIENT_ID,
     AUTH_FEISHU_CLIENT_SECRET: process.env.AUTH_FEISHU_CLIENT_SECRET,
+    AUTH_FEISHU_SCOPE: process.env.AUTH_FEISHU_SCOPE,
+    AUTH_FEISHU_TENANT_KEY: process.env.AUTH_FEISHU_TENANT_KEY,
     AUTH_CUSTOM_CLIENT_ID: process.env.AUTH_CUSTOM_CLIENT_ID,
     AUTH_CUSTOM_CLIENT_SECRET: process.env.AUTH_CUSTOM_CLIENT_SECRET,
     AUTH_CUSTOM_ISSUER: process.env.AUTH_CUSTOM_ISSUER,
@@ -793,6 +800,8 @@ export const env = createEnv({
     // EE License
     LANGFUSE_EE_LICENSE_KEY: process.env.LANGFUSE_EE_LICENSE_KEY,
     ADMIN_API_KEY: process.env.ADMIN_API_KEY,
+    LANGFUSE_SELF_HOSTED_MEMBERSHIP_API:
+      process.env.LANGFUSE_SELF_HOSTED_MEMBERSHIP_API,
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
     // langfuse caching
     LANGFUSE_CACHE_API_KEY_ENABLED: process.env.LANGFUSE_CACHE_API_KEY_ENABLED,

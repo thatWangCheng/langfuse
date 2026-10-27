@@ -181,6 +181,8 @@ if (env.AUTH_FEISHU_CLIENT_ID && env.AUTH_FEISHU_CLIENT_SECRET)
     FeishuProvider({
       clientId: env.AUTH_FEISHU_CLIENT_ID,
       clientSecret: env.AUTH_FEISHU_CLIENT_SECRET,
+      scope: env.AUTH_FEISHU_SCOPE,
+      tenantKey: env.AUTH_FEISHU_TENANT_KEY,
     }),
   );
 
