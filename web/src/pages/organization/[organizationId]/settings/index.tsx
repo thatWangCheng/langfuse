@@ -36,10 +36,13 @@ export function useOrganizationSettingsPages(): OrganizationSettingsPage[] {
     organizationId: organization?.id,
     scope: "organization:CRUD_apiKeys",
   });
-  const showOrgApiKeySettings = hasAdminApiEntitlement && hasOrgApiKeyAccess;
   const showAuditLogs = useHasEntitlement("audit-logs");
   const plan = usePlan();
   const isLangfuseCloud = isCloudPlan(plan) ?? false;
+  // Self-hosted: creating organization API keys needs no entitlement, and
+  // LANGFUSE_SELF_HOSTED_MEMBERSHIP_API serves the memberships API with them.
+  const showOrgApiKeySettings =
+    (hasAdminApiEntitlement || !isLangfuseCloud) && hasOrgApiKeyAccess;
   const isCloudBillingAvailable = useIsCloudBillingAvailable();
 
   if (!organization) return [];

@@ -62,6 +62,9 @@ revoke organization roles:
 - `DELETE { userId }` removes the membership and the user's project memberships
   in that organization.
 
+Create the organization API key under Organization Settings → API Keys (the
+tab is shown on self-hosted instances to OWNER / ADMIN).
+
 OWNER memberships are never granted, changed or removed through this API.
 Project-level roles are not offered: without the `rbac-project-roles`
 entitlement Langfuse applies the organization role to every project. Changes

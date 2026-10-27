@@ -5,6 +5,7 @@ import { useQueryProjectOrOrganization } from "@/src/features/projects/hooks";
 import { useHasOrganizationAccess } from "@/src/features/rbac/utils/checkOrganizationAccess";
 import { useIsCloudBillingAvailable } from "@/src/ee/features/billing/utils/isCloudBilling";
 import { useOrganizationSettingsPages } from "@/src/pages/organization/[organizationId]/settings";
+import { isCloudPlan } from "@langfuse/shared";
 
 vi.mock("@/src/components/PagedSettingsContainer", () => ({
   PagedSettingsContainer: () => null,
@@ -127,14 +128,26 @@ describe("useOrganizationSettingsPages", () => {
     );
   });
 
-  it("hides organization API key settings without admin-api entitlement", () => {
+  it("hides organization API key settings on Langfuse Cloud without admin-api entitlement", () => {
+    vi.mocked(useHasEntitlement).mockImplementation(() => false);
+    vi.mocked(useHasOrganizationAccess).mockReturnValue(true);
+    vi.mocked(isCloudPlan).mockReturnValueOnce(true);
+
+    const { result } = renderHook(() => useOrganizationSettingsPages());
+
+    expect(result.current.find((page) => page.slug === "api-keys")?.show).toBe(
+      false,
+    );
+  });
+
+  it("shows organization API key settings when self-hosted without admin-api entitlement", () => {
     vi.mocked(useHasEntitlement).mockImplementation(() => false);
     vi.mocked(useHasOrganizationAccess).mockReturnValue(true);
 
     const { result } = renderHook(() => useOrganizationSettingsPages());
 
     expect(result.current.find((page) => page.slug === "api-keys")?.show).toBe(
-      false,
+      true,
     );
   });
 });
