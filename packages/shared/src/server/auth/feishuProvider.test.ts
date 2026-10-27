@@ -95,6 +95,10 @@ describe("Feishu OAuth profile", () => {
     });
   });
 
+  it("checks state without PKCE", () => {
+    expect(FeishuProvider(options).checks).toEqual(["state"]);
+  });
+
   it("requests both email scopes unless configured otherwise", () => {
     const scopeOf = (provider: ReturnType<typeof FeishuProvider>) =>
       (provider.authorization as { params: { scope: string } }).params.scope;

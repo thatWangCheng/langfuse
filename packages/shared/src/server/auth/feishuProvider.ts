@@ -63,7 +63,12 @@ export function FeishuProvider(options: {
       },
     },
     client: { token_endpoint_auth_method: "client_secret_post" },
-    checks: ["pkce", "state"],
+    // No PKCE: the v3 token endpoint rejects a code_verifier whenever the
+    // authorization did not keep the code_challenge (seen when Feishu first
+    // detours through its own sign-in), failing with "PKCE code verifier
+    // failed". This is a confidential client: the code exchange needs the
+    // app secret, and state still guards against CSRF.
+    checks: ["state"],
     idToken: false,
     allowDangerousEmailAccountLinking: false,
     userinfo: {
