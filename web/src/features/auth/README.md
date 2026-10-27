@@ -17,6 +17,9 @@ image does not contain the Feishu provider.
    AUTH_FEISHU_CLIENT_SECRET=<app-secret>
    # Optional: reject users of other Feishu tenants.
    AUTH_FEISHU_TENANT_KEY=<tenant-key>
+   # Optional: sign in to an existing account with the same email (for example
+   # an email/password account). Requires AUTH_FEISHU_TENANT_KEY.
+   AUTH_FEISHU_ALLOW_ACCOUNT_LINKING=true
    # Optional: override the requested scopes (space separated).
    # AUTH_FEISHU_SCOPE=contact:user.email:readonly
    ```
@@ -36,11 +39,12 @@ If `AUTH_DISABLE_SIGNUP=true`, only existing users can sign in.
 The provider identifies accounts by Feishu `union_id`, which is the same across
 all apps of a tenant, so replacing the Feishu app keeps existing accounts. The
 user's email is the enterprise email (`enterprise_email`), falling back to the
-contact email (`email`); a user with neither cannot sign up. Langfuse does not
-automatically link an existing account by matching its email. An existing
-email/password account with the same email requires an explicit account
-migration before it can use Feishu. This version has no account-linking UI;
-opening the sign-in page while authenticated redirects to the home page.
+contact email (`email`); a user with neither cannot sign up. By default an
+existing account with the same email (for example an email/password account)
+blocks Feishu sign-in. With `AUTH_FEISHU_ALLOW_ACCOUNT_LINKING=true` and
+`AUTH_FEISHU_TENANT_KEY` set, Feishu signs in to that account and keeps its
+roles; the password keeps working. Linking is ignored without a tenant key,
+since emails are only trustworthy within the tenant whose admins assign them.
 Organization invitations and project permissions still apply.
 
 ## Organization memberships without an Enterprise license

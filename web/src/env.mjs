@@ -223,6 +223,7 @@ export const env = createEnv({
     AUTH_FEISHU_CLIENT_SECRET: z.string().optional(),
     AUTH_FEISHU_SCOPE: z.string().optional(),
     AUTH_FEISHU_TENANT_KEY: z.string().optional(),
+    AUTH_FEISHU_ALLOW_ACCOUNT_LINKING: z.enum(["true", "false"]).optional(),
     AUTH_CUSTOM_CLIENT_ID: z.string().optional(),
     AUTH_CUSTOM_CLIENT_SECRET: z.string().optional(),
     AUTH_CUSTOM_ISSUER: z.url().optional(),
@@ -683,6 +684,8 @@ export const env = createEnv({
     AUTH_FEISHU_CLIENT_SECRET: process.env.AUTH_FEISHU_CLIENT_SECRET,
     AUTH_FEISHU_SCOPE: process.env.AUTH_FEISHU_SCOPE,
     AUTH_FEISHU_TENANT_KEY: process.env.AUTH_FEISHU_TENANT_KEY,
+    AUTH_FEISHU_ALLOW_ACCOUNT_LINKING:
+      process.env.AUTH_FEISHU_ALLOW_ACCOUNT_LINKING,
     AUTH_CUSTOM_CLIENT_ID: process.env.AUTH_CUSTOM_CLIENT_ID,
     AUTH_CUSTOM_CLIENT_SECRET: process.env.AUTH_CUSTOM_CLIENT_SECRET,
     AUTH_CUSTOM_ISSUER: process.env.AUTH_CUSTOM_ISSUER,

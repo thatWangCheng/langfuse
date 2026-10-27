@@ -183,6 +183,7 @@ if (env.AUTH_FEISHU_CLIENT_ID && env.AUTH_FEISHU_CLIENT_SECRET)
       clientSecret: env.AUTH_FEISHU_CLIENT_SECRET,
       scope: env.AUTH_FEISHU_SCOPE,
       tenantKey: env.AUTH_FEISHU_TENANT_KEY,
+      allowAccountLinking: env.AUTH_FEISHU_ALLOW_ACCOUNT_LINKING === "true",
     }),
   );
 

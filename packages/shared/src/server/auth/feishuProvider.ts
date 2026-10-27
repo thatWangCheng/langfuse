@@ -31,6 +31,9 @@ export function FeishuProvider(options: {
   scope?: string;
   // When set, users of any other Feishu tenant are rejected.
   tenantKey?: string;
+  // Sign in to an existing account with the same email. Only honored together
+  // with tenantKey: emails within one tenant are assigned by its admins.
+  allowAccountLinking?: boolean;
 }): OAuthConfig<FeishuProfile> {
   return {
     id: "feishu",
@@ -70,7 +73,9 @@ export function FeishuProvider(options: {
     // app secret, and state still guards against CSRF.
     checks: ["state"],
     idToken: false,
-    allowDangerousEmailAccountLinking: false,
+    allowDangerousEmailAccountLinking: Boolean(
+      options.allowAccountLinking && options.tenantKey,
+    ),
     userinfo: {
       url: "https://open.feishu.cn/open-apis/authen/v1/user_info",
       async request({ client, tokens }) {

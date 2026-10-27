@@ -95,6 +95,18 @@ describe("Feishu OAuth profile", () => {
     });
   });
 
+  it("links accounts by email only when restricted to one tenant", () => {
+    const linking = (o: Partial<Parameters<typeof FeishuProvider>[0]>) =>
+      FeishuProvider({ ...options, ...o }).allowDangerousEmailAccountLinking;
+
+    expect(linking({})).toBe(false);
+    expect(linking({ allowAccountLinking: true })).toBe(false);
+    expect(linking({ tenantKey: "test-tenant" })).toBe(false);
+    expect(
+      linking({ allowAccountLinking: true, tenantKey: "test-tenant" }),
+    ).toBe(true);
+  });
+
   it("checks state without PKCE", () => {
     expect(FeishuProvider(options).checks).toEqual(["state"]);
   });
