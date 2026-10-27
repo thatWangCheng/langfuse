@@ -68,6 +68,7 @@ export type PageProps = {
     auth0: boolean;
     clickhouseCloud: boolean;
     cognito: boolean;
+    feishu: boolean;
     keycloak:
       | {
           name: string;
@@ -101,6 +102,9 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
   return {
     props: {
       authProviders: {
+        feishu:
+          env.AUTH_FEISHU_CLIENT_ID !== undefined &&
+          env.AUTH_FEISHU_CLIENT_SECRET !== undefined,
         google:
           env.AUTH_GOOGLE_CLIENT_ID !== undefined &&
           env.AUTH_GOOGLE_CLIENT_SECRET !== undefined,
@@ -476,6 +480,17 @@ export function SSOButtons({
               loading={providerSigningIn === "wordpress"}
               showLastUsedBadge={
                 hasMultipleAuthMethods && lastUsedMethod === "wordpress"
+              }
+            />
+          )}
+          {authProviders.feishu && (
+            <AuthProviderButton
+              icon={<TbBrandOauth className="mr-3" size={18} />}
+              label="Feishu (飞书)"
+              onClick={() => handleSignIn("feishu")}
+              loading={providerSigningIn === "feishu"}
+              showLastUsedBadge={
+                hasMultipleAuthMethods && lastUsedMethod === "feishu"
               }
             />
           )}

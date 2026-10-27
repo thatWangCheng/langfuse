@@ -50,6 +50,7 @@ import {
   CustomSSOProvider,
   GitHubEnterpriseProvider,
   JumpCloudProvider,
+  FeishuProvider,
   traceException,
   sendResetPasswordVerificationRequest,
   buildMailServerConfig,
@@ -174,6 +175,14 @@ if (env.SMTP_CONNECTION_URL && env.EMAIL_FROM_ADDRESS) {
     }),
   );
 }
+
+if (env.AUTH_FEISHU_CLIENT_ID && env.AUTH_FEISHU_CLIENT_SECRET)
+  staticProviders.push(
+    FeishuProvider({
+      clientId: env.AUTH_FEISHU_CLIENT_ID,
+      clientSecret: env.AUTH_FEISHU_CLIENT_SECRET,
+    }),
+  );
 
 if (
   env.AUTH_CUSTOM_CLIENT_ID &&
